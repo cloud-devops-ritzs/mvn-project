@@ -18,15 +18,24 @@ pipeline {
             }
         }
 
+        stage('Debug Workspace') {
+            steps {
+                sh 'pwd'
+                sh 'ls -ltr'
+            }
+        }
+
         stage('Build') {
             steps {
-                sh 'mvn clean package'
+                dir('mvn-project') {
+                    sh 'mvn clean package'
+                }
             }
         }
 
         stage('Upload WAR to S3') {
             steps {
-                sh 'aws s3 cp target/$WAR_FILE s3://$S3_BUCKET/'
+                sh 'aws s3 cp mvn-project/target/$WAR_FILE s3://$S3_BUCKET/'
             }
         }
 
