@@ -10,8 +10,8 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: https://github.com/cloud-devops-ritzs/mvn-project.git'
+                git branch: 'main', 
+                    url: 'https://github.com/cloud-devops-ritzs/mvn-project.git'
             }
         }
 
@@ -33,7 +33,7 @@ pipeline {
         stage('UPLOAD-WAR-TO-S3') {
             steps {
                 sh '''
-                    aws s3 cp /mnt/Jenkins-Mavem/target/gameoflife-java21-0.0.1-SNAPSHOT.war \
+                    aws s3 cp target/gameoflife-java21-0.0.1-SNAPSHOT.war \
                     s3://ritzs/
                 '''
             }
