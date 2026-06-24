@@ -1,13 +1,10 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven-3.9.16'
-    }
-
     environment {
         JAVA_HOME = '/usr/lib/jvm/java-21-amazon-corretto.x86_64'
-        PATH = "${JAVA_HOME}/bin:${PATH}"
+        MAVEN_HOME = '/mnt/build_tool/apache-maven-3.9.16'
+        PATH = "${MAVEN_HOME}/bin:${JAVA_HOME}/bin:${PATH}"
         S3_BUCKET = 'ritzs'
         WAR_FILE = 'gameoflife-java21-0.0.1-SNAPSHOT.war'
     }
@@ -17,7 +14,6 @@ pipeline {
         stage('Java Check') {
             steps {
                 sh 'java -version'
-                sh 'javac -version'
                 sh 'mvn -version'
             }
         }
