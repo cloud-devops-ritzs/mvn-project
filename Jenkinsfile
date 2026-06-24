@@ -10,7 +10,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', 
+                git branch: 'master', 
                     url: 'https://github.com/cloud-devops-ritzs/mvn-project.git'
             }
         }
@@ -41,7 +41,7 @@ pipeline {
 
         stage('DEPLOY-ON-SLAVE') {
             agent {
-                label 'slave-1'
+                label 'slave_1'
             }
             steps {
                 sh '''
