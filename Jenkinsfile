@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/swethapujari123/gameoflife-java21.git'
+                    url: https://github.com/cloud-devops-ritzs/mvn-project.git'
             }
         }
 
@@ -34,7 +34,7 @@ pipeline {
             steps {
                 sh '''
                     aws s3 cp /mnt/Jenkins-Mavem/target/gameoflife-java21-0.0.1-SNAPSHOT.war \
-                    s3://swethap973/
+                    s3://ritzs/
                 '''
             }
         }
@@ -46,7 +46,7 @@ pipeline {
             steps {
                 sh '''
                     aws s3 cp \
-                    s3://swethap973/gameoflife-java21-0.0.1-SNAPSHOT.war \
+                    s3://ritzs/gameoflife-java21-0.0.1-SNAPSHOT.war \
                     /mnt/apache-tomcat-10.1.55/webapps/gameoflife.war
                 '''
             }
@@ -57,7 +57,7 @@ pipeline {
                 sh '''
                     scp -o StrictHostKeyChecking=no \
                     target/gameoflife-java21-0.0.1-SNAPSHOT.war \
-                    root@172.31.86.119:/mnt/apache-tomcat-10.1.56/webapps/gameoflife.war
+                    root@172.31.47.96:/mnt/apache-tomcat-10.1.56/webapps/gameoflife.war
                 '''
             }
         }
