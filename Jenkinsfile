@@ -16,7 +16,7 @@ pipeline {
             steps {
                 script {
                     git branch: "${params.BRANCH}",
-                    url: 'https://github.com/swethapujari123/Jenkins-docker-httpd.git'
+                    url: 'https://github.com/cloud-devops-ritzs/mvn-project.git'
                 }
             }
         }
