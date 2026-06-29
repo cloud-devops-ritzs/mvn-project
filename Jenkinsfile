@@ -1,69 +1,46 @@
-
 pipeline {
+
     agent any
 
-    environment {
-        BRANCH_NAME = "${env.GIT_BRANCH.replaceAll('origin/', '')}"
-        CONTAINER_NAME = "${BRANCH_NAME}"   // Q1-2026, Q2-2026, or Q3-2026
-        PORT_MAP = ""
+    parameters {
+        choice(
+            name: 'BRANCH',
+            choices: ['q1', 'q2', 'q3'],
+            description: 'Select branch to deploy'
+        )
     }
 
     stages {
 
-        stage('Set Port') {
+        stage('Checkout') {
             steps {
                 script {
-                    if (BRANCH_NAME == 'Q1-2026') {
-                        env.PORT_MAP = "8081:80"
-                    } else if (BRANCH_NAME == 'Q2-2026') {
-                        env.PORT_MAP = "8082:80"
-                    } else if (BRANCH_NAME == 'Q3-2026') {
-                        env.PORT_MAP = "8083:80"
-                    }
+                    git branch: "${params.BRANCH}",
+                    url: 'https://github.com/cloud-devops-ritzs/mvn-project.git'
                 }
             }
         }
 
-        stage('Checkout') {
+        stage('Create HTTPD') {
             steps {
-                checkout scm
+                sh '''
+                docker rm -f httpd-container || true
+
+                docker run -d \
+                --name httpd-container \
+                -p 8085:80 \
+                httpd
+                '''
             }
         }
 
-        stage('Stop Old Container') {
+        stage('Deploy HTML') {
             steps {
-                sh """
-                    docker stop ${CONTAINER_NAME} || true
-                    docker rm ${CONTAINER_NAME} || true
-                """
+                sh '''
+                docker cp index.html httpd-container:/usr/local/apache2/htdocs/index.html
+                docker exec httpd-container chmod 644 /usr/local/apache2/htdocs/index.html
+                '''
             }
-        }
-
-        stage('Deploy httpd Container') {
-            steps {
-                sh """
-                    docker run -d \
-                        --name ${CONTAINER_NAME} \
-                        -p ${PORT_MAP} \
-                        -v \$(pwd):/usr/local/apache2/htdocs/ \
-                        httpd:latest
-                """
-            }
-        }
-
-        stage('Verify') {
-            steps {
-                sh "docker ps | grep ${CONTAINER_NAME}"
-            }
-        }
-    }
-
-    post {
-        success {
-            echo "Deployed ${CONTAINER_NAME} successfully!"
-        }
-        failure {
-            echo "Deployment failed for ${CONTAINER_NAME}"
         }
     }
 }
