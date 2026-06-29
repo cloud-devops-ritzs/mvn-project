@@ -4,7 +4,7 @@ pipeline {
 
     parameters {
         choice(
-            name: 'BRANCH',
+            name: 'branch',
             choices: ['q1', 'q2', 'q3'],
             description: 'Select branch to deploy'
         )
@@ -28,7 +28,7 @@ pipeline {
 
                 docker run -d \
                 --name httpd-container \
-                -p 8085:80 \
+                -p 8082:80 \
                 httpd
                 '''
             }
