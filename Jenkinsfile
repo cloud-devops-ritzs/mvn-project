@@ -2,57 +2,67 @@ pipeline {
     agent any
 
     environment {
-        JAVA_HOME = '/usr/lib/jvm/java-21-amazon-corretto.x86_64'
-        MAVEN_HOME = '/mnt/build_tool/apache-maven-3.9.16'
-        PATH = "${MAVEN_HOME}/bin:${JAVA_HOME}/bin:${PATH}"
-        S3_BUCKET = 'ritzs'
-        WAR_FILE = 'gameoflife-java21-0.0.1-SNAPSHOT.war'
+        BRANCH_NAME = "${env.GIT_BRANCH.replaceAll('origin/', '')}"
+        CONTAINER_NAME = "${BRANCH_NAME}"   // Q1-2026, Q2-2026, or Q3-2026
+        PORT_MAP = ""
     }
 
     stages {
 
-        stage('Java Check') {
+        stage('Set Port') {
             steps {
-                sh 'java -version'
-                sh 'mvn -version'
-            }
-        }
-
-        stage('Debug Workspace') {
-            steps {
-                sh 'pwd'
-                sh 'ls -ltr'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                dir('mvn-project') {
-                    sh 'mvn clean package'
+                script {
+                    if (BRANCH_NAME == 'Q1-2026') {
+                        env.PORT_MAP = "8081:80"
+                    } else if (BRANCH_NAME == 'Q2-2026') {
+                        env.PORT_MAP = "8082:80"
+                    } else if (BRANCH_NAME == 'Q3-2026') {
+                        env.PORT_MAP = "8083:80"
+                    }
                 }
             }
         }
 
-        stage('Upload WAR to S3') {
+        stage('Checkout') {
             steps {
-                sh 'aws s3 cp mvn-project/target/$WAR_FILE s3://$S3_BUCKET/'
+                checkout scm
             }
         }
 
-        stage('Deploy on Slave') {
-            agent {
-                label 'slave_1'
-            }
+        stage('Stop Old Container') {
             steps {
-                sh '''
-                    aws s3 cp s3://$S3_BUCKET/$WAR_FILE \
-                    /mnt/apache-tomcat-10.1.55/webapps/gameoflife.war
-
-                    /mnt/apache-tomcat-10.1.55/bin/shutdown.sh || true
-                    sleep 5
-                    /mnt/apache-tomcat-10.1.55/bin/startup.sh
-                '''
+                sh """
+                    docker stop ${CONTAINER_NAME} || true
+                    docker rm ${CONTAINER_NAME} || true
+                """
             }
+        }
+
+        stage('Deploy httpd Container') {
+            steps {
+                sh """
+                    docker run -d \
+                        --name ${CONTAINER_NAME} \
+                        -p ${PORT_MAP} \
+                        -v \$(pwd):/usr/local/apache2/htdocs/ \
+                        httpd:latest
+                """
+            }
+        }
+
+        stage('Verify') {
+            steps {
+                sh "docker ps | grep ${CONTAINER_NAME}"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Deployed ${CONTAINER_NAME} successfully!"
+        }
+        failure {
+            echo "Deployment failed for ${CONTAINER_NAME}"
         }
     }
 }
