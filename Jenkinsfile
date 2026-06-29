@@ -28,7 +28,7 @@ pipeline {
 
                 docker run -d \
                 --name httpd-container \
-                -p 8082:80 \
+                -p 8081:80 \
                 httpd
                 '''
             }
